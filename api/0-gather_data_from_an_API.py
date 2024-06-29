@@ -1,4 +1,3 @@
-
 #!/usr/bin/python3
 """
 Using a REST API, and a given emp_ID, return info about their TODO list.
@@ -26,4 +25,3 @@ if __name__ == "__main__":
     for key, val in serialized_todos.items():
         if val is True:
             print("\t {}".format(key))
-
