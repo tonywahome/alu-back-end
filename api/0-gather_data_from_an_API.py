@@ -1,27 +1,45 @@
 #!/usr/bin/python3
 """
-Using a REST API, and a given emp_ID, return info about their TODO list.
+    This employee ID, gives out the information about TODO list employee.
 """
+
+
 import requests
 import sys
 
+base_url = 'https://jsonplaceholder.typicode.com/'
 
-if __name__ == "__main__":
-    """ main section """
-    BASE_URL = 'https://jsonplaceholder.typicode.com'
-    employee = requests.get(
-        BASE_URL + f'/users/{sys.argv[1]}/').json()
-    EMPLOYEE_NAME = employee.get("name")
-    employee_todos = requests.get(
-        BASE_URL + f'/users/{sys.argv[1]}/todos').json()
-    serialized_todos = {}
 
-    for todo in employee_todos:
-        serialized_todos.update({todo.get("title"): todo.get("completed")})
+def do_request():
+    '''Performs request'''
+    if len(sys.argv) < 2:
+        return print('USAGE:', __file__, '<employee id>')
+    eid = sys.argv[1]
+    try:
+        _eid = int(sys.argv[1])
+    except ValueError:
+        return print('Employee id must be an integer')
 
-    COMPLETED_LEN = len([k for k, v in serialized_todos.items() if v is True])
-    print("Employee {} is done with tasks({}/{}):".format(
-        EMPLOYEE_NAME, COMPLETED_LEN, len(serialized_todos)))
-    for key, val in serialized_todos.items():
-        if val is True:
-            print("\t {}".format(key))
+    response = requests.get(base_url + 'users/' + eid)
+    if response.status_code == 404:
+        return print('User id not found')
+    elif response.status_code != 200:
+        return print('Error: status_code:', response.status_code)
+    user = response.json()
+
+    response = requests.get(base_url + 'todos/')
+    if response.status_code != 200:
+        return print('Error: status_code:', response.status_code)
+    todos = response.json()
+
+    user_todos = [todo for todo in todos
+                  if todo.get('userId') == user.get('id')]
+    completed = [todo for todo in user_todos if todo.get('completed')]
+    print('Employee', user.get('name'),
+          'is done with tasks({}/{}):'.
+          format(len(completed), len(user_todos)))
+    [print('\t', todo.get('title')) for todo in completed]
+
+
+if __name__ == '__main__':
+    do_request()
